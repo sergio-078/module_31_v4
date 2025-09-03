@@ -1,0 +1,19 @@
+Еженедельная рассылка новостей от MMORPG Portal
+
+Здравствуйте, {{ user.first_name|default:user.email }}!
+
+За последнюю неделю на нашем портале появились новые новости:
+
+{% for item in news %}
+- {{ item.title }} ({{ item.created_at|date:"d.m.Y" }})
+  {{ item.content|striptags|truncatewords:20 }}
+  Ссылка: {{ SITE_URL }}{{ item.get_absolute_url }}
+
+{% endfor %}
+
+Всего новостей за неделю: {{ news|length }}
+
+С уважением,
+Команда MMORPG Portal
+
+Если вы хотите отписаться от рассылки, перейдите в личный кабинет.

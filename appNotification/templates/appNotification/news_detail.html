@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ news.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Новость -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="card-title">{{ news.title }}</h1>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted">
+                        {{ news.created_at|date:"d.m.Y H:i" }} |
+                        {{ news.views_count }} просмотров
+                    </small>
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'news_subscribe' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm {% if is_subscribed %}btn-danger{% else %}btn-success{% endif %}">
+                                {% if is_subscribed %}Отписаться{% else %}Подписаться{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="card-text post-content">
+                    {{ news.content|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    {% if previous_news %}
+                    <div class="col-md-6">
+                        <small>Предыдущая новость</small>
+                        <br>
+                        <a href="{% url 'news_detail' previous_news.id %}">{{ previous_news.title|truncatewords:5 }}</a>
+                    </div>
+                    {% endif %}
+                    {% if next_news %}
+                    <div class="col-md-6 text-end">
+                        <small>Следующая новость</small>
+                        <br>
+                        <a href="{% url 'news_detail' next_news.id %}">{{ next_news.title|truncatewords:5 }}</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Действия -->
+        {% if user.is_staff %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Действия</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'news_edit' news.id %}" class="btn btn-warning w-100 mb-2">Редактировать</a>
+                <a href="{% url 'news_delete' news.id %}" class="btn btn-danger w-100">Удалить</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Популярные новости -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Популярные новости</h5>
+            </div>
+            <div class="card-body">
+                {% for popular_news in popular_news %}
+                    <div class="mb-2">
+                        <a href="{% url 'news_detail' popular_news.id %}" class="text-decoration-none">
+                            {{ popular_news.title|truncatewords:5 }}
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ popular_news.views_count }} просмотров</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

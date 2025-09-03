@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Просмотр отклика{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Просмотр отклика</h3>
+            </div>
+            <div class="card-body">
+                <h5>К объявлению: <a href="{% url 'post_detail' response.post.id %}">{{ response.post.title }}</a></h5>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="card-text">{{ response.text }}</p>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">
+                                Автор: {{ response.author.email }} |
+                                {{ response.created_at|date:"d.m.Y H:i" }} |
+                                {% if response.is_accepted %}
+                                    <span class="badge bg-success">Принят</span>
+                                {% elif response.is_rejected %}
+                                    <span class="badge bg-danger">Отклонен</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Ожидает</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    {% if can_accept and not response.is_accepted and not response.is_rejected %}
+                        <form method="post" action="{% url 'accept_response' response.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Принять отклик</button>
+                        </form>
+                    {% endif %}
+
+                    {% if can_reject and not response.is_rejected and not response.is_accepted %}
+                        <form method="post" action="{% url 'reject_response' response.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Отклонить отклик</button>
+                        </form>
+                    {% endif %}
+
+                    {% if can_delete %}
+                        <form method="post" action="{% url 'delete_response' response.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">Полностью удалить</button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'post_detail' response.post.id %}" class="btn btn-secondary">Назад к объявлению</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

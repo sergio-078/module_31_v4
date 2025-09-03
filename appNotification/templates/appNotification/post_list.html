@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Объявления - MMORPG Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Объявления</h2>
+            {% if user.is_authenticated %}
+                <a href="{% url 'post_create' %}" class="btn btn-primary">Создать объявление</a>
+            {% endif %}
+        </div>
+
+        <!-- Фильтры и поиск -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row">
+                    <div class="col-md-5">
+                        <select name="category" class="form-select" id="category-filter">
+                            <option value="">Все категории</option>
+                            {% for value, name in category_choices %}
+                                <option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>
+                                    {{ name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="text" name="q" class="form-control" placeholder="Поиск..."
+                               value="{{ request.GET.q }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Фильтровать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Список объявлений -->
+        {% for post in posts %}
+            {% include 'appNotification/includes/post_item.html' %}
+        {% empty %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <p class="text-muted">Объявлений пока нет</p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'post_create' %}" class="btn btn-primary">Создать первое объявление</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        {% include 'includes/pagination.html' %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Категории</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for value, name in category_choices %}
+                        <a href="?category={{ value }}"
+                           class="list-group-item list-group-item-action {% if request.GET.category == value %}active{% endif %}">
+                            {{ name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Свежие объявления</h5>
+            </div>
+            <div class="card-body">
+                {% for recent_post in recent_posts %}
+                    <div class="mb-2">
+                        <a href="{% url 'post_detail' recent_post.id %}" class="text-decoration-none">
+                            {{ recent_post.title|truncatewords:5 }}
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ recent_post.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

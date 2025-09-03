@@ -1,0 +1,57 @@
+# Django
+# *.log
+# *.pot
+# *.pyc
+__pycache__/
+# db.sqlite3
+# media/
+staticfiles/
+# .env
+# .env.local
+# .env.production
+
+# IDE
+# .vscode/
+# .idea/
+# *.swp
+# *.swo
+
+# OS
+# .DS_Store
+# Thumbs.db
+
+# Python
+venv/
+# env/
+# ENV/
+
+# Local settings
+# proNotification/settings/local.py
+# proNotification/settings/secret.py
+
+# Logs
+# logs/*.log
+# !logs/.gitkeep
+
+# Environment variables
+# .env
+# .env.local
+
+# Secret settings
+# proNotification/settings/secret.py
+# proNotification/settings/local.py
+# proNotification/settings/secret_*.py
+
+# Environment files
+.env
+# .env.*
+# !.env.example
+
+# Backup files
+# *.backup
+# *.bak
+
+# Key files
+# *.key
+# *.pem
+# *.crt

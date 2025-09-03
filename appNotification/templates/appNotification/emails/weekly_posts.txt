@@ -1,0 +1,19 @@
+Еженедельная рассылка по категории {{ category.name }}
+
+Здравствуйте, {{ user.first_name|default:user.email }}!
+
+За последнюю неделю в категории "{{ category.name }}" появились новые объявления:
+
+{% for post in posts %}
+- {{ post.title }} от {{ post.author.email }} ({{ post.created_at|date:"d.m.Y" }})
+  {{ post.content|striptags|truncatewords:20 }}
+  Ссылка: {{ SITE_URL }}{{ post.get_absolute_url }}
+
+{% endfor %}
+
+Всего объявлений за неделю: {{ posts|length }}
+
+С уважением,
+Команда MMORPG Portal
+
+Если вы хотите отписаться от рассылки по этой категории, перейдите в личный кабинет.

@@ -1,0 +1,14 @@
+Ваш отклик был принят
+
+Здравствуйте, {{ response.author.first_name|default:response.author.email }}!
+
+Автор объявления "{{ post.title }}" принял ваш отклик.
+
+Текст вашего отклика:
+{{ response.text }}
+
+Для просмотра объявления перейдите по ссылке:
+{{ SITE_URL }}{% url 'post_detail' post.id %}
+
+С уважением,
+Команда MMORPG Portal

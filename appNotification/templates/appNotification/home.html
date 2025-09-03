@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - MMORPG Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>Добро пожаловать на MMORPG Portal!</h2>
+            </div>
+            <div class="card-body">
+                <p>Это лучшая площадка для поиска товарищей по игре, обмена опытом и новостей игрового мира.</p>
+
+                <div class="row mt-4">
+                    <div class="col-md-4 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3>{{ posts_count }}</h3>
+                                <p>Объявлений</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3>{{ news_count }}</h3>
+                                <p>Новостей</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3>{{ users_count }}</h3>
+                                <p>Пользователей</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                    Все материалы
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="news-tab" data-bs-toggle="tab" data-bs-target="#news" type="button" role="tab">
+                    Новости
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">
+                    Объявления
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="contentTabsContent">
+            <div class="tab-pane fade show active" id="all" role="tabpanel">
+                {% for item in combined_content %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {% if item.type == 'news' %}
+                                    <span class="badge bg-info">Новость</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Объявление</span>
+                                {% endif %}
+                                {{ item.title }}
+                            </h5>
+                            <p class="card-text">{{ item.content|striptags|truncatewords:30 }}</p>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    {{ item.created_at|date:"d.m.Y H:i" }}
+                                    {% if item.get_category_display %}
+                                        | {{ item.get_category_display }}
+                                    {% endif %}
+                                </small>
+                                <a href="{% if item.type == 'news' %}{% url 'news_detail' item.id %}{% else %}{% url 'post_detail' item.id %}{% endif %}" class="btn btn-sm btn-outline-primary">
+                                    Читать далее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="tab-pane fade" id="news" role="tabpanel">
+                {% for news in latest_news %}
+                    {% include 'appNotification/includes/news_item.html' with news=news %}
+                {% endfor %}
+            </div>
+
+            <div class="tab-pane fade" id="posts" role="tabpanel">
+                {% for post in latest_posts %}
+                    {% include 'appNotification/includes/post_item.html' with post=post %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Популярные категории</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for category in categories %}
+                        <a href="{% url 'post_list' %}?category={{ category.value }}" class="list-group-item list-group-item-action">
+                            {{ category.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Свежие новости</h5>
+            </div>
+            <div class="card-body">
+                {% for news in recent_news %}
+                    <div class="mb-2">
+                        <a href="{% url 'news_detail' news.id %}" class="text-decoration-none">
+                            {{ news.title|truncatewords:5 }}
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ news.created_at|date:"d.m.Y" }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

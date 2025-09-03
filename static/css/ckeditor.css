@@ -1,0 +1,19 @@
+.cke_editable {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.cke_editable img {
+    max-width: 100%;
+    height: auto;
+}
+
+.cke_editable table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cke_editable table, .cke_editable th, .cke_editable td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}

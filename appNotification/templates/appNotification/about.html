@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ title }}</h2>
+            </div>
+            <div class="card-body">
+                <p>{{ content }}</p>
+                <p>Этот портал создан для сообщества MMORPG игроков. Здесь вы можете:</p>
+                <ul>
+                    <li>Создавать объявления о поиске группы</li>
+                    <li>Откликаться на предложения других игроков</li>
+                    <li>Читать новости игрового мира</li>
+                    <li>Подписываться на интересующие вас категории</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Статистика</h5>
+            </div>
+            <div class="card-body">
+                <p>Объявления: {{ posts_count }}</p>
+                <p>Новости: {{ news_count }}</p>
+                <p>Пользователи: {{ users_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

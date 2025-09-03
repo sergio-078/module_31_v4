@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Новости - MMORPG Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Новости</h2>
+            {% if user.is_staff %}
+                <a href="{% url 'news_create' %}" class="btn btn-primary">Создать новость</a>
+            {% endif %}
+        </div>
+
+        {% for news in news %}
+            {% include 'appNotification/includes/news_item.html' %}
+        {% empty %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <p class="text-muted">Новостей пока нет</p>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% include 'includes/pagination.html' %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Подписка на новости</h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'news_subscribe' %}">
+                        {% csrf_token %}
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" {% if is_subscribed %}checked{% endif %}
+                                   onchange="this.form.submit()">
+                            <label class="form-check-label">Получать уведомления о новостях</label>
+                        </div>
+                    </form>
+                {% else %}
+                    <p>Войдите, чтобы подписаться на новости</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Популярные новости</h5>
+            </div>
+            <div class="card-body">
+                {% for popular_news in news|slice:":5" %}
+                    <div class="mb-2">
+                        <a href="{% url 'news_detail' popular_news.id %}" class="text-decoration-none">
+                            {{ popular_news.title|truncatewords:5 }}
+                        </a>
+                        <br>
+                        <small class="text-muted">{{ popular_news.views_count }} просмотров</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
