@@ -347,3 +347,7 @@ Traceback (most recent call last):
     raise NoReverseMatch(msg)
 django.urls.exceptions.NoReverseMatch: Reverse for 'verify_email' with no arguments not found. 1 pattern(s) tried: ['user/verify/(?P<code>[^/]+)/\\Z']
 ERROR 2025-09-03 22:33:07,712 basehttp 7744 14892 "GET /user/verify/1P_l05vT8rKqr-kHPI7fJinXvz7W6vZJUrJSHTb1hJI/ HTTP/1.1" 500 90432
+WARNING 2025-09-04 19:39:29,993 log 22508 17428 Not Found: /favicon.ico
+WARNING 2025-09-04 19:39:29,993 basehttp 22508 17428 "GET /favicon.ico HTTP/1.1" 404 9306
+WARNING 2025-09-04 19:40:36,400 log 22508 20608 Not Found: /favicon.ico
+WARNING 2025-09-04 19:40:36,400 basehttp 22508 20608 "GET /favicon.ico HTTP/1.1" 404 9306

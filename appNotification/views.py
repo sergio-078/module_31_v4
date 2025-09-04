@@ -510,7 +510,16 @@ class NewsCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             action=f"Created news {self.object.id}",
             ip_address=self.request.META.get('REMOTE_ADDR')
         )
+
         messages.success(self.request, _('News created successfully!'))
+
+        # Логируем отправку уведомлений
+        if form.cleaned_data.get('notify_subscribers', True):
+            from appNotification.models import Subscription
+            subscribers_count = Subscription.objects.filter(news=True).count()
+            messages.info(self.request,
+                          _(f'Notifications sent to {subscribers_count} subscribers'))
+
         return response
 
     def get_success_url(self):

@@ -15,8 +15,9 @@ class ResponseAdmin(admin.ModelAdmin):
 
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created_at', 'views_count']
-    list_filter = ['created_at']
+    list_display = ['title', 'created_at', 'views_count', 'notify_subscribers']
+    list_filter = ['created_at', 'notify_subscribers']
+    list_editable = ['notify_subscribers']
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

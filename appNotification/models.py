@@ -92,6 +92,7 @@ class News(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     subscribers = models.ManyToManyField(User, related_name='subscribed_news', blank=True)
     views_count = models.PositiveIntegerField(default=0, verbose_name=_('Views count'))
+    notify_subscribers = models.BooleanField(default=True, verbose_name=_('Notify subscribers'))
 
     class Meta:
         ordering = ['-created_at']

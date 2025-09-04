@@ -76,16 +76,21 @@ class ResponseForm(forms.ModelForm):
 class NewsForm(forms.ModelForm):
     class Meta:
         model = News
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'notify_subscribers']  # Добавляем поле
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': _('Enter news title')
             }),
+            'notify_subscribers': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+                'checked': True
+            }),
         }
         labels = {
             'title': _('Title'),
             'content': _('Content'),
+            'notify_subscribers': _('Notify subscribers about this news'),
         }
 
     content = forms.CharField(widget=CKEditorWidget(config_name='default'), label=_('Content'))

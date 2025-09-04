@@ -117,3 +117,41 @@ def send_weekly_posts_digest():
     except Exception as e:
         logger.error(f"Error sending weekly posts digest: {e}")
         return f'Error: {e}'
+
+
+@shared_task
+def send_news_notification(news_id):
+    """Асинхронная отправка уведомлений о новой новости"""
+    from .models import News, Subscription
+    from appUser.models import UserActionLog
+
+    try:
+        news = News.objects.get(id=news_id)
+        subscribers = Subscription.objects.filter(news=True).select_related('user')
+
+        for subscription in subscribers:
+            subject = _('New news on MMORPG Portal: {}').format(news.title)
+            message = render_to_string('appNotification/emails/new_news_notification.txt', {
+                'news': news,
+                'user': subscription.user,
+                'SITE_URL': settings.SITE_URL
+            })
+
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [subscription.user.email],
+                fail_silently=False,
+            )
+
+            UserActionLog.objects.create(
+                user=subscription.user,
+                action=f"Received notification about news {news.id}",
+            )
+
+        return f'Sent news notification to {subscribers.count()} subscribers'
+
+    except Exception as e:
+        logger.error(f"Error sending news notifications: {e}")
+        return f'Error: {e}'
