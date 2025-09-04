@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 import pytz
 
-from .forms import RegistrationForm, ProfileForm
+from .forms import RegistrationForm, ProfileForm, VerificationForm
 from .models import CustomUser, EmailVerification, UserActionLog
 
 
@@ -31,9 +31,10 @@ class RegisterView(View):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False
+            user.is_active = False  # Пользователь не активен до подтверждения
             user.save()
 
+            # Создаем верификацию через модель, а не через сигнал
             verification = EmailVerification.create_verification(user)
             verification.send_verification_email()
 
@@ -48,9 +49,13 @@ class RegisterView(View):
                 action="Registered new account",
                 ip_address=getattr(request, 'user_ip', None)
             )
-            return redirect('login')
+            return redirect('verification_sent')
 
         return render(request, self.template_name, {'form': form})
+
+
+def verification_sent(request):
+    return render(request, 'appUser/verification_sent.html')
 
 
 def verify_email(request, code):
@@ -60,10 +65,13 @@ def verify_email(request, code):
         if not verification.is_valid():
             messages.error(request, _('Verification link has expired. Please register again.'))
             verification.delete()
+            # Удаляем пользователя, если верификация просрочена
+            verification.user.delete()
             return redirect('register')
 
         user = verification.user
         user.is_active = True
+        user.email_verified = True
         user.save()
         verification.delete()
 
@@ -73,11 +81,51 @@ def verify_email(request, code):
             action="Email verified successfully",
             ip_address=getattr(request, 'user_ip', None)
         )
-        return redirect('login')
+        return redirect('login')  # Простой редирект на логин
 
     except EmailVerification.DoesNotExist:
         messages.error(request, _('Invalid verification link.'))
         return redirect('register')
+
+
+class VerificationView(View):
+    template_name = 'appUser/verification.html'
+
+    def get(self, request):
+        form = VerificationForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = VerificationForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            try:
+                verification = EmailVerification.objects.get(code=code)
+
+                if not verification.is_valid():
+                    messages.error(request, _('Verification code has expired. Please register again.'))
+                    verification.delete()
+                    verification.user.delete()
+                    return redirect('register')
+
+                user = verification.user
+                user.is_active = True
+                user.email_verified = True
+                user.save()
+                verification.delete()
+
+                messages.success(request, _('Email verified successfully! You can now log in.'))
+                UserActionLog.objects.create(
+                    user=user,
+                    action="Email verified successfully with code",
+                    ip_address=getattr(request, 'user_ip', None)
+                )
+                return redirect('login')
+
+            except EmailVerification.DoesNotExist:
+                messages.error(request, _('Invalid verification code.'))
+
+        return render(request, self.template_name, {'form': form})
 
 
 @login_required

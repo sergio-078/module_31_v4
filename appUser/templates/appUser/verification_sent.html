@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Письмо с подтверждением отправлено{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Письмо отправлено</h3>
+            </div>
+            <div class="card-body text-center">
+                <div class="alert alert-info">
+                    <h5>Проверьте вашу почту!</h5>
+                    <p>Мы отправили письмо с ссылкой для подтверждения на указанный вами email адрес.</p>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6>Важно!</h6>
+                    <p>Ссылка для подтверждения действительна в течение <strong>24 часов</strong>.</p>
+                    <p>Если вы не подтвердите email в течение этого времени, вам придется зарегистрироваться заново.</p>
+                </div>
+
+                <p>Не получили письмо?</p>
+                <ul class="text-start">
+                    <li>Проверьте папку "Спам"</li>
+                    <li>Убедитесь, что вы ввели правильный email</li>
+                    <li>Попробуйте отправить письмо еще раз</li>
+                </ul>
+
+                <div class="mt-3">
+                    <a href="{% url 'login' %}" class="btn btn-primary">Войти</a>
+                    <a href="{% url 'register' %}" class="btn btn-secondary">Зарегистрироваться снова</a>
+                    <a href="{% url 'verification' %}" class="btn btn-outline-primary">Ввести код вручную</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

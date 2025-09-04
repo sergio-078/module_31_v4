@@ -35,10 +35,15 @@ class RegistrationForm(UserCreationForm):
         }),
         help_text=_("Enter the same password as before, for verification.")
     )
+    agree_to_terms = forms.BooleanField(
+        label=_("I agree to the terms and conditions"),
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        error_messages={'required': _('You must agree to the terms and conditions')}
+    )
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'password1', 'password2')
+        fields = ('email', 'password1', 'password2', 'agree_to_terms')
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -54,6 +59,18 @@ class RegistrationForm(UserCreationForm):
             raise ValidationError(_("Passwords don't match"))
 
         return password2
+
+class VerificationForm(forms.Form):
+    code = forms.CharField(
+        label=_("Verification Code"),
+        max_length=64,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('Enter verification code from email'),
+            'autocomplete': 'off'
+        }),
+        help_text=_("Enter the verification code sent to your email address.")
+    )
 
 
 class ProfileForm(forms.ModelForm):

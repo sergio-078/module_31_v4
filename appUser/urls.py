@@ -1,6 +1,6 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
-from django.contrib.auth.views import LoginView #, LogoutView
+from django.contrib.auth.views import LoginView
 from . import views
 from django.utils.translation import gettext_lazy as _
 
@@ -11,18 +11,15 @@ urlpatterns = [
         extra_context={'title': _('Login')}
     ), name='login'),
 
-    # path('logout/', LogoutView.as_view(
-    #     template_name='appUser/logout.html',
-    #     extra_context={'title': _('Logout')}
-    # ), name='logout'),
-
-path('logout/', auth_views.LogoutView.as_view(
+    path('logout/', auth_views.LogoutView.as_view(
         template_name='appUser/logout.html',
         next_page='/'
     ), name='logout'),
 
     path('register/', views.RegisterView.as_view(), name='register'),
     path('verify/<str:code>/', views.verify_email, name='verify_email'),
+    path('verification/sent/', views.verification_sent, name='verification_sent'),
+    path('verification/', views.VerificationView.as_view(), name='verification'),
 
     # Password reset
     path('password_reset/', views.custom_password_reset, name='password_reset'),

@@ -3,7 +3,7 @@ from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.mail import send_mail
-from .models import CustomUser, UserActionLog
+from .models import CustomUser, UserActionLog, EmailVerification
 
 
 @receiver(post_save, sender=CustomUser)
@@ -15,8 +15,12 @@ def log_user_creation(sender, instance, created, **kwargs):
         UserActionLog.objects.create(
             user=instance,
             action="User account created",
-            ip_address=None  # Можно добавить позже через middleware
+            ip_address=None
         )
+
+        # Создаем верификацию и отправляем email
+        verification = EmailVerification.create_verification(instance)
+        verification.send_verification_email()
 
         # Для разработки - вывод в консоль
         print(f"\n=== USER CREATED ===")
@@ -64,7 +68,7 @@ def send_welcome_email(sender, instance, created, **kwargs):
     """
     Отправляет приветственное письмо при активации аккаунта
     """
-    if created and instance.is_active:
+    if created and instance.is_active and instance.email_verified:
         subject = _('Welcome to MMORPG Portal!')
         message = _(
             'Hello {}!\n\n'

@@ -7,6 +7,7 @@ import secrets
 from django.utils import timezone
 from datetime import timedelta
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -14,13 +15,14 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+        user.is_active = False  # Пользователь не активен до подтверждения
         user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_active', True)  # Суперпользователь активен сразу
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError(_('Superuser must have is_staff=True.'))
@@ -34,6 +36,7 @@ class CustomUser(AbstractUser):
     username = models.CharField(max_length=150, blank=True, null=True)
     timezone = models.CharField(max_length=50, default='UTC')
     language = models.CharField(max_length=10, choices=[('ru', 'Russian'), ('en', 'English')], default='ru')
+    email_verified = models.BooleanField(default=False)  # Новое поле для подтверждения email
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -54,6 +57,7 @@ class EmailVerification(models.Model):
 
     @classmethod
     def create_verification(cls, user):
+        # Удаляем старые верификации для этого пользователя
         cls.objects.filter(user=user).delete()
         code = secrets.token_urlsafe(32)
         verification = cls.objects.create(user=user, code=code)
@@ -69,27 +73,27 @@ class EmailVerification(models.Model):
         subject = _('Email Verification - MMORPG Portal')
         verification_url = f"{settings.SITE_URL}/user/verify/{self.code}/"
         expiration_time = self.get_expiration_time()
+        expiration_time_str = expiration_time.astimezone(timezone.get_current_timezone()).strftime("%d.%m.%Y %H:%M")
 
         message = _(
             'Welcome to MMORPG Portal!\n\n'
             'Please verify your email by clicking the following link:\n'
             '{}\n\n'
-            'This verification link is valid for 24 hours until {} (UTC).\n'
+            'This verification link is valid for 24 hours until {} ({}).\n'
             'If you do not verify your email within 24 hours, '
             'you will need to register again.\n\n'
             'Best regards,\n'
             'MMORPG Portal Team'
-        ).format(verification_url, expiration_time.strftime("%Y-%m-%d %H:%M:%S"))
+        ).format(verification_url, expiration_time_str, timezone.get_current_timezone_name())
 
         # Для разработки
         print(f"\n=== EMAIL VERIFICATION ===")
         print(f"To: {self.user.email}")
         print(f"Subject: {subject}")
         print(f"Link: {verification_url}")
-        print(f"Expires: {expiration_time}")
+        print(f"Expires: {expiration_time_str}")
         print("=======================\n")
 
-        # Отправляем письмо
         send_mail(
             subject,
             message,

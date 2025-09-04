@@ -11,13 +11,17 @@
                 <h3 class="text-center">Регистрация</h3>
             </div>
             <div class="card-body">
+                <div class="alert alert-info">
+                    <p class="mb-0">После регистрации вам будет отправлено письмо с подтверждением на указанный email.</p>
+                </div>
+
                 <form method="post">
                     {% csrf_token %}
                     {{ form|crispy }}
                     <button type="submit" class="btn btn-primary w-100 mt-3">Зарегистрироваться</button>
                 </form>
-                <div class="text-center mt-3">
-                    <a href="{% url 'login' %}">Уже есть аккаунт? Войти</a>
+                <div class="mt-3 text-center">
+                    <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
                 </div>
             </div>
         </div>

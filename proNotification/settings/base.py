@@ -56,6 +56,7 @@ MIDDLEWARE = [
 
     # Custom middleware
     'appUser.middleware.UserIPMiddleware',
+    'appUser.middleware.EmailVerificationMiddleware',
 ]
 
 ROOT_URLCONF = 'proNotification.urls'

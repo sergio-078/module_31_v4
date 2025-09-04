@@ -313,3 +313,37 @@ Traceback (most recent call last):
            ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
 django.db.utils.OperationalError: no such column: appNotification_response.is_rejected
 ERROR 2025-09-03 20:46:28,351 basehttp 5188 18700 "GET /cabinet/ HTTP/1.1" 500 230308
+ERROR 2025-09-03 22:18:34,547 log 8564 3116 Internal Server Error: /
+Traceback (most recent call last):
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\core\handlers\base.py", line 185, in _get_response
+    response = middleware_method(
+        request, callback, callback_args, callback_kwargs
+    )
+  File "D:\Project\Tests\tests\Module 31_4\appUser\middleware.py", line 39, in process_view
+    reverse('verify_email'),
+    ~~~~~~~^^^^^^^^^^^^^^^^
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\urls\base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'verify_email' with no arguments not found. 1 pattern(s) tried: ['user/verify/(?P<code>[^/]+)/\\Z']
+ERROR 2025-09-03 22:18:34,551 basehttp 8564 3116 "GET / HTTP/1.1" 500 90069
+ERROR 2025-09-03 22:33:07,710 log 7744 14892 Internal Server Error: /user/verify/1P_l05vT8rKqr-kHPI7fJinXvz7W6vZJUrJSHTb1hJI/
+Traceback (most recent call last):
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\core\handlers\base.py", line 185, in _get_response
+    response = middleware_method(
+        request, callback, callback_args, callback_kwargs
+    )
+  File "D:\Project\Tests\tests\Module 31_4\appUser\middleware.py", line 39, in process_view
+    reverse('verify_email'),
+    ~~~~~~~^^^^^^^^^^^^^^^^
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\urls\base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "D:\Project\Tests\tests\Module 31_4\venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'verify_email' with no arguments not found. 1 pattern(s) tried: ['user/verify/(?P<code>[^/]+)/\\Z']
+ERROR 2025-09-03 22:33:07,712 basehttp 7744 14892 "GET /user/verify/1P_l05vT8rKqr-kHPI7fJinXvz7W6vZJUrJSHTb1hJI/ HTTP/1.1" 500 90432
