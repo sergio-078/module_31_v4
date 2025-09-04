@@ -124,3 +124,57 @@ def notify_subscribers_on_new_news(sender, instance, created, **kwargs):
                     )
                 except Exception as e:
                     print(f"Error sending news notification to {subscription.user.email}: {e}")
+
+
+@receiver(post_save, sender='appNotification.Post')
+def notify_category_subscribers_on_new_post(sender, instance, created, **kwargs):
+    """
+    Отправляет уведомления подписчикам категории при создании нового объявления
+    """
+    if created and instance.notify_subscribers:
+        from appUser.models import UserActionLog
+        from .models import Subscription
+
+        # Получаем всех подписчиков этой категории
+        category_subscribers = Subscription.objects.filter(
+            category__value=instance.category
+        ).select_related('user')
+
+        if category_subscribers.exists():
+            subject = _('New post in category {}: {}').format(
+                instance.get_category_display(),
+                instance.title
+            )
+
+            for subscription in category_subscribers:
+                message = render_to_string('appNotification/emails/new_post_notification.txt', {
+                    'post': instance,
+                    'user': subscription.user,
+                    'category': instance.get_category_display(),
+                    'SITE_URL': settings.SITE_URL
+                })
+
+                # Для разработки
+                print(f"\n=== NEW POST NOTIFICATION ===")
+                print(f"To: {subscription.user.email}")
+                print(f"Subject: {subject}")
+                print(f"Category: {instance.get_category_display()}")
+                print(f"Post: {instance.title}")
+                print(f"Link: {settings.SITE_URL}{instance.get_absolute_url()}")
+                print("=============================\n")
+
+                try:
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [subscription.user.email],
+                        fail_silently=False,
+                    )
+
+                    UserActionLog.objects.create(
+                        user=subscription.user,
+                        action=f"Received notification about post {instance.id} in category {instance.category}",
+                    )
+                except Exception as e:
+                    print(f"Error sending post notification to {subscription.user.email}: {e}")

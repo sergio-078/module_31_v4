@@ -3,9 +3,9 @@ from .models import Post, Response, News, Category, Subscription
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ['title', 'author', 'category', 'created_at']
-    list_filter = ['category', 'created_at']
-    search_fields = ['title', 'content']
+    list_display = ['title', 'author', 'category', 'created_at', 'notify_subscribers']
+    list_filter = ['category', 'created_at', 'notify_subscribers']
+    list_editable = ['notify_subscribers']
 
 @admin.register(Response)
 class ResponseAdmin(admin.ModelAdmin):

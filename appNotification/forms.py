@@ -7,10 +7,20 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 class PostForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditorUploadingWidget())
+    notify_subscribers = forms.BooleanField(
+        required=False,
+        initial=True,
+        label=_('Notify category subscribers'),
+        help_text=_('Send notifications to users subscribed to this category'),
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'checked': True
+        })
+    )
 
     class Meta:
         model = Post
-        fields = ['category', 'title', 'content', 'image', 'video']
+        fields = ['category', 'title', 'content', 'image', 'video', 'notify_subscribers']
         widgets = {
             'category': forms.Select(attrs={
                 'class': 'form-select',

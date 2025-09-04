@@ -155,3 +155,47 @@ def send_news_notification(news_id):
     except Exception as e:
         logger.error(f"Error sending news notifications: {e}")
         return f'Error: {e}'
+
+
+@shared_task
+def send_post_notification(post_id):
+    """Асинхронная отправка уведомлений о новом объявлении"""
+    from .models import Post, Subscription
+    from appUser.models import UserActionLog
+
+    try:
+        post = Post.objects.get(id=post_id)
+        subscribers = Subscription.objects.filter(
+            category__value=post.category
+        ).select_related('user')
+
+        for subscription in subscribers:
+            subject = _('New post in category {}: {}').format(
+                post.get_category_display(),
+                post.title
+            )
+            message = render_to_string('appNotification/emails/new_post_notification.txt', {
+                'post': post,
+                'user': subscription.user,
+                'category': post.get_category_display(),
+                'SITE_URL': settings.SITE_URL
+            })
+
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [subscription.user.email],
+                fail_silently=False,
+            )
+
+            UserActionLog.objects.create(
+                user=subscription.user,
+                action=f"Received notification about post {post.id} in category {post.category}",
+            )
+
+        return f'Sent post notification to {subscribers.count()} subscribers'
+
+    except Exception as e:
+        logger.error(f"Error sending post notifications: {e}")
+        return f'Error: {e}'

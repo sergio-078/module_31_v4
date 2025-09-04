@@ -46,6 +46,7 @@ class Post(models.Model):
     subscribers = models.ManyToManyField(User, related_name='subscribed_posts', blank=True)
     image = models.ImageField(upload_to='posts/images/', blank=True, null=True)
     video = models.FileField(upload_to='posts/videos/', blank=True, null=True)
+    notify_subscribers = models.BooleanField(default=True, verbose_name=_('Notify subscribers'))
 
     class Meta:
         ordering = ['-created_at']
@@ -56,7 +57,6 @@ class Post(models.Model):
         return f"{self.title} by {self.author.email}"
 
     def get_absolute_url(self):
-        from django.urls import reverse
         return reverse('post_detail', kwargs={'pk': self.pk})
 
     def get_category_display(self):

@@ -98,6 +98,16 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         )
 
         messages.success(self.request, _('Post created successfully!'))
+
+        # Логируем отправку уведомлений
+        if form.cleaned_data.get('notify_subscribers', True):
+            from .models import Subscription
+            subscribers_count = Subscription.objects.filter(
+                category__value=self.object.category
+            ).count()
+            messages.info(self.request,
+                          _(f'Notifications sent to {subscribers_count} subscribers of category "{self.object.get_category_display()}"'))
+
         return response
 
     def get_success_url(self):
