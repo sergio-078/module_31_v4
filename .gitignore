@@ -43,7 +43,7 @@ venv/
 # proNotification/settings/secret_*.py
 
 # Environment files
-.env
+# .env
 # .env.*
 # !.env.example
 
