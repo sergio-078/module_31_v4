@@ -5,13 +5,49 @@
 {% block title %}Редактирование объявления{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/ckeditor.css' %}">
 <style>
     .editor-help {
         background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
         border-radius: 10px;
-        padding: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .editor-help h5 {
+        color: #e65100;
         margin-bottom: 1rem;
+    }
+
+    #image-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    #image-preview img {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .ck-editor-container {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .current-media {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .current-media img {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 6px;
     }
 </style>
 {% endblock %}
@@ -26,11 +62,10 @@
                 </h3>
             </div>
             <div class="card-body">
+                <!-- Помощь по редактору -->
                 <div class="editor-help">
-                    <p class="mb-0 small">
-                        <i class="bi bi-info-circle"></i> Вы редактируете существующее объявление.
-                        Все изменения будут сразу видны пользователям.
-                    </p>
+                    <h5><i class="bi bi-lightbulb"></i> Редактор с поддержкой медиа</h5>
+                    <p>Используйте панель инструментов для редактирования текста, добавления изображений и видео.</p>
                 </div>
 
                 <form method="post" enctype="multipart/form-data" id="post-form">
@@ -38,37 +73,81 @@
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            {{ form.category|as_crispy_field }}
+                            <div class="form-group">
+                                {{ form.category|as_crispy_field }}
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            {{ form.title|as_crispy_field }}
+                            <div class="form-group">
+                                {{ form.title|as_crispy_field }}
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Поле контента с CKEditor -->
                     <div class="form-group mb-4">
                         <label class="form-label fw-bold">Содержание объявления *</label>
-                        {{ form.content }}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Используйте редактор для редактирования текста, добавления изображений и видео
+                        </div>
+
+                        <div class="ck-editor-container">
+                            <textarea name="content" id="content-editor" rows="10" cols="80">
+                                {{ form.content.value|default:object.content|safe }}
+                            </textarea>
+                        </div>
+                        <small class="form-text text-muted">
+                            Минимум 20 символов. Поддерживается загрузка изображений, вставка видео и HTML-контента.
+                        </small>
                     </div>
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            {{ form.image|as_crispy_field }}
-                            {% if object.image %}
-                                <div class="mt-2">
-                                    <p class="small text-muted">Текущее изображение:</p>
-                                    <img src="{{ object.image.url }}" alt="Current image"
-                                         class="img-thumbnail" style="max-height: 150px;">
+                            <div class="form-group">
+                                {{ form.image|as_crispy_field }}
+                                <div id="image-preview" class="text-center"></div>
+
+                                <!-- Текущее изображение -->
+                                {% if object.image %}
+                                <div class="current-media mt-3">
+                                    <h6>Текущее изображение:</h6>
+                                    <img src="{{ object.image.url }}" alt="Текущее изображение" class="img-thumbnail">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="image-clear" id="image-clear">
+                                        <label class="form-check-label" for="image-clear">
+                                            Удалить текущее изображение
+                                        </label>
+                                    </div>
                                 </div>
-                            {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            {{ form.video|as_crispy_field }}
-                            {% if object.video %}
-                                <div class="mt-2">
-                                    <p class="small text-muted">Текущее видео:</p>
-                                    <span class="badge bg-info">{{ object.video.name }}</span>
+                            <div class="form-group">
+                                {{ form.video|as_crispy_field }}
+                                <small class="form-text text-muted">
+                                    Поддерживаемые форматы: MP4, AVI, MOV, WMV, WebM (макс. 100MB)
+                                </small>
+
+                                <!-- Текущее видео -->
+                                {% if object.video %}
+                                <div class="current-media mt-3">
+                                    <h6>Текущее видео:</h6>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-info me-2">
+                                            <i class="bi bi-film"></i> {{ object.video.name|slice:"-20:" }}
+                                        </span>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="video-clear" id="video-clear">
+                                            <label class="form-check-label" for="video-clear">
+                                                Удалить текущее видео
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                            {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
@@ -79,17 +158,53 @@
                                 {{ form.notify_subscribers.label }}
                             </label>
                         </div>
+                        <small class="form-text text-muted">
+                            {{ form.notify_subscribers.help_text }}
+                        </small>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="submit" class="btn btn-primary me-md-2">
+                        <button type="submit" class="btn btn-primary btn-lg me-md-2">
                             <i class="bi bi-check-circle"></i> Сохранить изменения
                         </button>
-                        <a href="{% url 'post_detail' object.id %}" class="btn btn-secondary">
+                        <a href="{% url 'post_detail' object.id %}" class="btn btn-secondary btn-lg">
                             <i class="bi bi-x-circle"></i> Отмена
                         </a>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Инструкция по использованию редактора -->
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-book"></i> Доступные функции редактора
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>📷 Медиа-контент:</h6>
+                        <ul class="small">
+                            <li><strong>Изображения:</strong> Кнопка "Image" → "Загрузить"</li>
+                            <li><strong>Видео:</strong> Вставьте ссылку YouTube или используйте кнопку "Медиа"</li>
+                            <li><strong>Таблицы:</strong> Кнопка "Table" для создания таблиц</li>
+                            <li><strong>Ссылки:</strong> Выделите текст → кнопка "Link"</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>🎨 Форматирование:</h6>
+                        <ul class="small">
+                            <li><strong>B</strong> - Жирный текст</li>
+                            <li><strong>I</strong> - Курсив</li>
+                            <li><strong>U</strong> - Подчеркивание</li>
+                            <li><strong>Цвета</strong> - Текст и фон</li>
+                            <li><strong>Списки</strong> - Нумерованные и маркированные</li>
+                            <li><strong>Выравнивание</strong> - По left/center/right</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -98,40 +213,162 @@
 
 {% block extra_js %}
 <script>
-// Предпросмотр изображения
+// Конфигурация CKEditor
+function initCKEditor() {
+    CKEDITOR.replace('content-editor', {
+        // Основные настройки
+        language: 'ru',
+        height: 400,
+        width: '100%',
+
+        // Настройки загрузки файлов
+        filebrowserUploadUrl: '/ckeditor/upload/',
+        filebrowserUploadMethod: 'form',
+
+        // Панель инструментов
+        toolbar: [
+            { name: 'document', items: ['Source', '-', 'Preview', 'Print'] },
+            { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+            { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll'] },
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'] },
+            { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+            { name: 'insert', items: ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar'] },
+            { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+            { name: 'colors', items: ['TextColor', 'BGColor'] },
+            { name: 'tools', items: ['Maximize', 'ShowBlocks'] }
+        ],
+
+        // Разрешенный контент
+        allowedContent: true,
+        extraAllowedContent: '*(*);*{*}',
+        disallowedContent: 'script; *[on*]',
+
+        // Дополнительные настройки
+        removePlugins: 'resize,elementspath',
+        autoParagraph: false,
+        fillEmptyBlocks: false,
+        tabSpaces: 4
+    });
+}
+
+// Предпросмотр нового изображения
 function previewImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         const preview = document.getElementById('image-preview');
 
-        if (!preview) {
-            const container = document.createElement('div');
-            container.id = 'image-preview';
-            container.className = 'mt-2 text-center';
-            input.parentNode.appendChild(container);
-        }
+        preview.innerHTML = '';
 
         reader.onload = function(e) {
             const img = document.createElement('img');
             img.src = e.target.result;
-            img.alt = 'Предпросмотр';
+            img.alt = 'Предпросмотр нового изображения';
             img.className = 'img-thumbnail';
-            img.style.maxHeight = '150px';
-            preview.innerHTML = '';
+            img.style.maxHeight = '200px';
             preview.appendChild(img);
-        }
+        };
 
         reader.readAsDataURL(input.files[0]);
     }
 }
 
+// Обработка удаления текущих медиа-файлов
+function setupMediaDeletion() {
+    const imageClear = document.getElementById('image-clear');
+    const videoClear = document.getElementById('video-clear');
+    const imageInput = document.querySelector('#id_image');
+    const videoInput = document.querySelector('#id_video');
+
+    if (imageClear && imageInput) {
+        imageClear.addEventListener('change', function() {
+            if (this.checked) {
+                imageInput.disabled = true;
+            } else {
+                imageInput.disabled = false;
+            }
+        });
+    }
+
+    if (videoClear && videoInput) {
+        videoClear.addEventListener('change', function() {
+            if (this.checked) {
+                videoInput.disabled = true;
+            } else {
+                videoInput.disabled = false;
+            }
+        });
+    }
+}
+
+// Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Инициализация CKEditor для редактирования...');
+
+    // Инициализируем CKEditor
+    if (typeof CKEDITOR !== 'undefined') {
+        setTimeout(initCKEditor, 100);
+    } else {
+        console.error('CKEditor не загружен');
+        // Fallback: показываем обычное текстовое поле
+        const editor = document.getElementById('content-editor');
+        if (editor) {
+            editor.style.display = 'block';
+            editor.style.visibility = 'visible';
+            editor.classList.add('form-control');
+        }
+    }
+
+    // Настройка предпросмотра новых изображений
     const imageInput = document.querySelector('#id_image');
     if (imageInput) {
         imageInput.addEventListener('change', function() {
             previewImage(this);
+            // Сбрасываем флаг удаления если загружаем новое изображение
+            const imageClear = document.getElementById('image-clear');
+            if (imageClear) {
+                imageClear.checked = false;
+            }
+        });
+    }
+
+    // Настройка обработки удаления медиа
+    setupMediaDeletion();
+
+    // Валидация формы
+    const form = document.getElementById('post-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['content-editor']) {
+                const content = CKEDITOR.instances['content-editor'].getData();
+                const plainText = content.replace(/<[^>]*>/g, '').trim();
+
+                if (plainText.length < 20) {
+                    e.preventDefault();
+                    alert('Содержание объявления должно содержать минимум 20 символов текста');
+                    return false;
+                }
+
+                // Устанавливаем очищенное значение в скрытое поле
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'content';
+                hiddenInput.value = content;
+                form.appendChild(hiddenInput);
+            }
         });
     }
 });
+
+// Функция для проверки доступных функций
+function checkEditorFunctions() {
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['content-editor']) {
+        const editor = CKEDITOR.instances['content-editor'];
+        console.log('Редактор для редактирования загружен');
+    }
+}
+
+// Проверяем функции через 3 секунды
+setTimeout(checkEditorFunctions, 3000);
 </script>
 {% endblock %}

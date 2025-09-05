@@ -116,7 +116,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    form_class = PostForm
+    form_class = PostForm  # Используем ту же форму
     template_name = 'appNotification/post_edit.html'
 
     def test_func(self):
@@ -125,6 +125,18 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
+
+        # Обработка удаления изображения
+        if 'image-clear' in self.request.POST:
+            if self.object.image:
+                self.object.image.delete(save=False)
+
+        # Обработка удаления видео
+        if 'video-clear' in self.request.POST:
+            if self.object.video:
+                self.object.video.delete(save=False)
+
+        self.object.save()
 
         UserActionLog.objects.create(
             user=self.request.user,
