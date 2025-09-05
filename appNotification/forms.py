@@ -6,7 +6,12 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 
 class PostForm(forms.ModelForm):
-    content = forms.CharField(widget=CKEditorUploadingWidget())
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 10, 'class': 'form-control'}),
+        label=_('Content *'),
+        help_text=_('Use the editor to add images, videos, formatting and other rich content')
+    )
+
     notify_subscribers = forms.BooleanField(
         required=False,
         initial=True,
@@ -56,7 +61,7 @@ class PostForm(forms.ModelForm):
 
     def clean_content(self):
         content = self.cleaned_data['content']
-        if len(content) < 20:
+        if len(content.strip()) < 20:
             raise forms.ValidationError(_('Content must be at least 20 characters long'))
         return content
 

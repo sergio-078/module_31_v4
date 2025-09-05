@@ -1,19 +1,129 @@
 .cke_editable {
     font-size: 14px;
     line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .cke_editable img {
     max-width: 100%;
     height: auto;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.cke_editable iframe,
+.cke_editable video {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1rem 0;
 }
 
 .cke_editable table {
     width: 100%;
     border-collapse: collapse;
+    margin: 1rem 0;
 }
 
 .cke_editable table, .cke_editable th, .cke_editable td {
     border: 1px solid #dee2e6;
     padding: 0.5rem;
+}
+
+.cke_editable th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.cke_editable .embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+.cke_editable .embed-responsive::before {
+    content: "";
+    display: block;
+    padding-top: 56.25%;
+}
+
+.cke_editable .embed-responsive-item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Стили для контента на странице */
+.post-content {
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.post-content img:hover {
+    transform: scale(1.02);
+}
+
+.post-content iframe,
+.post-content video {
+    width: 100%;
+    min-height: 400px;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    border: none;
+}
+
+.post-content .video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+}
+
+.post-content .video-container iframe,
+.post-content .video-container video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.post-content table, .post-content th, .post-content td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.post-content th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: left;
+}
+
+.post-content tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.post-content tr:hover {
+    background-color: #e9ecef;
 }

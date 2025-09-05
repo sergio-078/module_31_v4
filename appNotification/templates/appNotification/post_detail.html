@@ -1,131 +1,551 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}{{ post.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ckeditor.css' %}">
+<style>
+    .media-gallery {
+        margin: 2rem 0;
+    }
+
+    .media-gallery .gallery-item {
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .media-gallery .gallery-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .media-gallery .gallery-item img:hover {
+        transform: scale(1.05);
+    }
+
+    .media-gallery .gallery-item .video-thumbnail {
+        position: relative;
+    }
+
+    .media-gallery .gallery-item .video-thumbnail::before {
+        content: '▶';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        z-index: 2;
+    }
+
+    .media-gallery .gallery-item .video-thumbnail::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.3);
+        border-radius: 8px;
+        z-index: 1;
+    }
+
+    .embedded-video {
+        margin: 1.5rem 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .embedded-video iframe {
+        border-radius: 12px;
+    }
+
+    .post-meta {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .post-meta .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.8em;
+    }
+
+    .action-buttons .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .subscription-form {
+        display: inline;
+    }
+
+    .author-info {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .author-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #0d6efd;
+    }
+
+    .response-card {
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s ease;
+    }
+
+    .response-card.accepted {
+        border-left-color: #198754;
+        background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+    }
+
+    .response-card.rejected {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #fff8f8 0%, #f5e8e8 100%);
+    }
+
+    .response-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .lightbox-modal .modal-content {
+        background: transparent;
+        border: none;
+    }
+
+    .lightbox-modal .modal-body {
+        padding: 0;
+        text-align: center;
+    }
+
+    .lightbox-modal .modal-body img {
+        max-height: 80vh;
+        width: auto;
+        max-width: 100%;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-8">
-        <!-- Пост -->
-        <div class="card mb-4">
-            {% if post.image %}
-                <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}">
-            {% endif %}
-            <div class="card-body">
-                <h2 class="card-title">{{ post.title }}</h2>
-                <h6 class="card-subtitle mb-3 text-muted">
-                    <span class="badge bg-secondary">{{ post.get_category_display }}</span>
-                    Автор: {{ post.author.email }} | {{ post.created_at|date:"d.m.Y H:i" }}
-                </h6>
-                <div class="card-text post-content">
-                    {{ post.content|safe }}
+        <!-- Мета-информация об объявлении -->
+        <div class="post-meta">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="h2 mb-2">{{ post.title }}</h1>
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                        <span class="badge bg-primary fs-6">{{ post.get_category_display }}</span>
+                        <span class="text-muted">
+                            <i class="bi bi-calendar me-1"></i>{{ post.created_at|date:"d.m.Y H:i" }}
+                        </span>
+                        <span class="text-muted">
+                            <i class="bi bi-eye me-1"></i>{{ post.views_count }} просмотров
+                        </span>
+                        <span class="text-muted">
+                            <i class="bi bi-chat-dots me-1"></i>{{ responses.count }} откликов
+                        </span>
+                    </div>
                 </div>
-                {% if post.video %}
-                    <div class="mt-3">
-                        <video controls width="100%">
-                            <source src="{{ post.video.url }}" type="video/mp4">
-                            Ваш браузер не поддерживает видео.
-                        </video>
-                    </div>
-                {% endif %}
+                <div class="action-buttons">
+                    {% if user == post.author or user.is_staff %}
+                        <a href="{% url 'post_edit' post.id %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a href="{% url 'post_delete' post.id %}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
 
+            <div class="d-flex align-items-center mt-2">
+                <i class="bi bi-person-circle me-2"></i>
+                <span class="fw-medium">{{ post.author.email }}</span>
                 {% if user.is_authenticated %}
-                    <div class="mt-3">
-                        <form method="post" action="{% url 'post_subscribe' post.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm {% if is_subscribed %}btn-danger{% else %}btn-success{% endif %}">
-                                {% if is_subscribed %}Отписаться{% else %}Подписаться{% endif %}
-                            </button>
-                        </form>
-                    </div>
+                    <form method="post" action="{% url 'post_subscribe' post.id %}" class="subscription-form ms-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if is_subscribed %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                            <i class="bi bi-bell{% if is_subscribed %}-slash{% endif %}"></i>
+                            {% if is_subscribed %}Отписаться{% else %}Подписаться{% endif %}
+                        </button>
+                    </form>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Отклики -->
-<div class="card">
-    <div class="card-header">
-        <h5>Отклики ({{ responses.count }})</h5>
-    </div>
-    <div class="card-body">
-        {% if responses %}
-            {% for response in responses %}
-                <div class="card mb-2 {% if response.is_accepted %}border-success{% elif response.is_rejected %}border-danger{% endif %}">
-                    <div class="card-body">
-                        <p class="card-text">{{ response.text }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                {{ response.author.email }} | {{ response.created_at|date:"d.m.Y H:i" }}
-                                {% if response.is_accepted %}
-                                    <span class="badge bg-success">Принят</span>
-                                {% elif response.is_rejected %}
-                                    <span class="badge bg-danger">Отклонен</span>
-                                {% endif %}
-                            </small>
-                            <div>
-                                {% if user == post.author and not response.is_accepted and not response.is_rejected %}
-                                    <form method="post" action="{% url 'accept_response' response.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success me-1">Принять</button>
-                                    </form>
-                                    <form method="post" action="{% url 'reject_response' response.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger">Отклонить</button>
-                                    </form>
-                                {% endif %}
-                                <a href="{% url 'response_detail' response.id %}" class="btn btn-sm btn-outline-primary ms-1">Подробнее</a>
+        <!-- Основное содержимое -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="card-text post-content">
+                    {{ post.content|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Основное изображение -->
+        {% if post.image %}
+        <div class="card mb-4">
+            <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}" style="max-height: 400px; object-fit: cover;">
+        </div>
+        {% endif %}
+
+        <!-- Основное видео -->
+        {% if post.video %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Видео к объявлению</h5>
+                <video controls width="100%" class="rounded">
+                    <source src="{{ post.video.url }}" type="video/mp4">
+                    Ваш браузер не поддерживает видео.
+                </video>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Галерея встроенных медиа -->
+        {% with embedded_content=post.get_embedded_content %}
+            {% if embedded_content.images or embedded_content.videos or embedded_content.iframes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Медиа в объявлении</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Встроенные изображения -->
+                    {% if embedded_content.images %}
+                    <div class="media-gallery">
+                        <h6>Изображения:</h6>
+                        <div class="row">
+                            {% for image in embedded_content.images %}
+                            <div class="col-md-4 col-sm-6 gallery-item">
+                                <img src="{{ image.src }}" alt="{{ image.alt }}"
+                                     class="img-fluid" onclick="openLightbox('{{ image.src }}')">
                             </div>
+                            {% endfor %}
                         </div>
                     </div>
+                    {% endif %}
+
+                    <!-- Встроенные видео -->
+                    {% if embedded_content.videos %}
+                    <div class="media-gallery">
+                        <h6>Видео:</h6>
+                        <div class="row">
+                            {% for video in embedded_content.videos %}
+                            <div class="col-12 mb-3">
+                                <video controls width="100%" class="rounded">
+                                    <source src="{{ video.src }}">
+                                    Ваш браузер не поддерживает видео.
+                                </video>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Встроенные iframe (YouTube и др.) -->
+                    {% if embedded_content.iframes %}
+                    <div class="media-gallery">
+                        <h6>Встроенные видео:</h6>
+                        {% for iframe in embedded_content.iframes %}
+                        <div class="embedded-video">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="{{ iframe.src }}"
+                                        frameborder="{{ iframe.frameborder }}"
+                                        allowfullscreen></iframe>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted">Откликов пока нет</p>
-        {% endif %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Отклики -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-dots"></i> Отклики
+                    <span class="badge bg-secondary">{{ responses.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if responses %}
+                    {% for response in responses %}
+                        <div class="card mb-3 response-card {% if response.is_accepted %}accepted{% elif response.is_rejected %}rejected{% endif %}">
+                            <div class="card-body">
+                                <p class="card-text">{{ response.text }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ response.author.email }} |
+                                        <i class="bi bi-clock"></i> {{ response.created_at|date:"d.m.Y H:i" }}
+                                        {% if response.is_accepted %}
+                                            <span class="badge bg-success ms-2">Принят</span>
+                                        {% elif response.is_rejected %}
+                                            <span class="badge bg-danger ms-2">Отклонен</span>
+                                        {% endif %}
+                                    </small>
+                                    <div>
+                                        {% if user == post.author and not response.is_accepted and not response.is_rejected %}
+                                            <form method="post" action="{% url 'accept_response' response.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check-lg"></i> Принять
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'reject_response' response.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-x-lg"></i> Отклонить
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        <a href="{% url 'response_detail' response.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-info-circle"></i> Подробнее
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">
+                        <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                        Откликов пока нет
+                    </p>
+                {% endif %}
 
                 <!-- Форма отклика -->
                 {% if user.is_authenticated and user != post.author %}
-                    <div class="mt-4">
+                    <div class="mt-4 p-3 bg-light rounded">
                         <h6>Оставить отклик</h6>
                         <form method="post" action="{% url 'response_create' post.id %}">
                             {% csrf_token %}
                             {{ response_form|crispy }}
-                            <button type="submit" class="btn btn-primary">Отправить отклик</button>
+                            <button type="submit" class="btn btn-primary mt-2">
+                                <i class="bi bi-send"></i> Отправить отклик
+                            </button>
                         </form>
                     </div>
                 {% elif not user.is_authenticated %}
-                    <p class="text-muted">
-                        <a href="{% url 'login' %}">Войдите</a>, чтобы оставить отклик
-                    </p>
+                    <div class="alert alert-info mt-3">
+                        <p class="mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            <a href="{% url 'login' %}" class="alert-link">Войдите</a>, чтобы оставить отклик
+                        </p>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="card">
+        <!-- Боковая панель с действиями -->
+        <div class="card mb-4">
             <div class="card-header">
-                <h5>Действия</h5>
+                <h5 class="mb-0">Действия</h5>
             </div>
             <div class="card-body">
-                {% if user == post.author or user.is_staff %}
-                    <a href="{% url 'post_edit' post.id %}" class="btn btn-warning w-100 mb-2">Редактировать</a>
-                    <a href="{% url 'post_delete' post.id %}" class="btn btn-danger w-100">Удалить</a>
-                {% endif %}
-                <a href="{% url 'post_list' %}" class="btn btn-secondary w-100 mt-2">К списку объявлений</a>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> К списку объявлений
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'response_create' post.id %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Оставить отклик
+                        </a>
+                    {% endif %}
+                    {% if user.is_staff %}
+                        <a href="/admin/appNotification/post/{{ post.id }}/change/" class="btn btn-outline-warning" target="_blank">
+                            <i class="bi bi-gear"></i> Редактировать в админке
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <div class="card mt-3">
+        <!-- Информация об авторе -->
+        <div class="card mb-4">
             <div class="card-header">
-                <h5>Автор</h5>
+                <h5 class="mb-0">Об авторе</h5>
             </div>
             <div class="card-body">
-                <p class="mb-1"><strong>Email:</strong> {{ post.author.email }}</p>
-                <p class="mb-1"><strong>Имя:</strong> {{ post.author.first_name }} {{ post.author.last_name }}</p>
-                <p class="mb-0"><strong>Зарегистрирован:</strong> {{ post.author.date_joined|date:"d.m.Y" }}</p>
+                <div class="text-center mb-3">
+                    <div class="author-avatar-placeholder bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ post.author.email|first|upper }}
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <h6>{{ post.author.get_full_name|default:post.author.email }}</h6>
+                    <p class="text-muted small mb-2">{{ post.author.email }}</p>
+
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <div class="text-center">
+                            <div class="fw-bold">{{ post.author.posts.count }}</div>
+                            <small class="text-muted">Объявлений</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="fw-bold">{{ post.author.responses.count }}</div>
+                            <small class="text-muted">Откликов</small>
+                        </div>
+                    </div>
+
+                    <small class="text-muted d-block">
+                        <i class="bi bi-calendar"></i> На сайте с {{ post.author.date_joined|date:"d.m.Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Похожие объявления -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Похожие объявления</h5>
+            </div>
+            <div class="card-body">
+                {% with similar_posts=post.get_similar_posts %}
+                    {% if similar_posts %}
+                        {% for similar_post in similar_posts|slice:":3" %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'post_detail' similar_post.id %}" class="text-decoration-none">
+                                        {{ similar_post.title|truncatewords:5 }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted d-block">
+                                    <span class="badge bg-secondary bg-opacity-25 text-dark">
+                                        {{ similar_post.get_category_display }}
+                                    </span>
+                                </small>
+                                <small class="text-muted">
+                                    {{ similar_post.created_at|date:"d.m.Y" }}
+                                </small>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted small">Нет похожих объявлений</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="modal fade lightbox-modal" id="lightboxModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <img src="" alt="" class="img-fluid" id="lightboxImage">
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Закрыть
+                </button>
+                <a href="#" class="btn btn-primary" id="lightboxDownload" download>
+                    <i class="bi bi-download"></i> Скачать
+                </a>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// Lightbox для изображений
+function openLightbox(imageSrc) {
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxDownload = document.getElementById('lightboxDownload');
+
+    lightboxImage.src = imageSrc;
+    lightboxImage.alt = 'Увеличенное изображение';
+    lightboxDownload.href = imageSrc;
+
+    const lightboxModal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+    lightboxModal.show();
+}
+
+// Инициализация видео плееров
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем controls ко всем видео
+    document.querySelectorAll('video').forEach(video => {
+        if (!video.controls) {
+            video.controls = true;
+        }
+    });
+
+    // Инициализация tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Плавная прокрутка к откликам
+    const responseForms = document.querySelectorAll('form[action*="response"]');
+    responseForms.forEach(form => {
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                const responsesSection = document.querySelector('.response-card');
+                if (responsesSection) {
+                    responsesSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 1000);
+        });
+    });
+});
+
+// Подтверждение действий
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('a[href*="delete"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Вы уверены, что хотите удалить это объявление? Это действие нельзя отменить.')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
+Также добавьте метод в модель Post для получения похожих объявлений:
+
+appNotification/models.py:
+python
+
+class Post(models.Model):
+    # ... существующие поля и методы ...
+
+    def get_similar_posts(self):
+        """Возвращает похожие объявления из той же категории"""
+        return Post.objects.filter(
+            category=self.category
+        ).exclude(
+            id=self.id
+        ).select_related(
+            'author'
+        ).order_by(
+            '-created_at'
+        )[:5]

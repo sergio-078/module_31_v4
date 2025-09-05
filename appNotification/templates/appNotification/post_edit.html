@@ -1,26 +1,137 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Редактирование объявления{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ckeditor.css' %}">
+<style>
+    .editor-help {
+        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-lg-10">
         <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Редактирование объявления</h3>
+            <div class="card-header bg-warning text-dark">
+                <h3 class="text-center mb-0">
+                    <i class="bi bi-pencil"></i> Редактирование объявления
+                </h3>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <div class="editor-help">
+                    <p class="mb-0 small">
+                        <i class="bi bi-info-circle"></i> Вы редактируете существующее объявление.
+                        Все изменения будут сразу видны пользователям.
+                    </p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="post-form">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                        <a href="{% url 'post_detail' object.id %}" class="btn btn-secondary">Отмена</a>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            {{ form.category|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.title|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="form-label fw-bold">Содержание объявления *</label>
+                        {{ form.content }}
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            {{ form.image|as_crispy_field }}
+                            {% if object.image %}
+                                <div class="mt-2">
+                                    <p class="small text-muted">Текущее изображение:</p>
+                                    <img src="{{ object.image.url }}" alt="Current image"
+                                         class="img-thumbnail" style="max-height: 150px;">
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.video|as_crispy_field }}
+                            {% if object.video %}
+                                <div class="mt-2">
+                                    <p class="small text-muted">Текущее видео:</p>
+                                    <span class="badge bg-info">{{ object.video.name }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.notify_subscribers }}
+                            <label class="form-check-label" for="{{ form.notify_subscribers.id_for_label }}">
+                                {{ form.notify_subscribers.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary me-md-2">
+                            <i class="bi bi-check-circle"></i> Сохранить изменения
+                        </button>
+                        <a href="{% url 'post_detail' object.id %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Предпросмотр изображения
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        const preview = document.getElementById('image-preview');
+
+        if (!preview) {
+            const container = document.createElement('div');
+            container.id = 'image-preview';
+            container.className = 'mt-2 text-center';
+            input.parentNode.appendChild(container);
+        }
+
+        reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = 'Предпросмотр';
+            img.className = 'img-thumbnail';
+            img.style.maxHeight = '150px';
+            preview.innerHTML = '';
+            preview.appendChild(img);
+        }
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const imageInput = document.querySelector('#id_image');
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            previewImage(this);
+        });
+    }
+});
+</script>
 {% endblock %}

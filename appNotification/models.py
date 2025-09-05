@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.core.validators import MinLengthValidator
 from ckeditor.fields import RichTextField
 from ckeditor_uploader.fields import RichTextUploadingField
+from bs4 import BeautifulSoup
 
 User = get_user_model()
 
@@ -40,12 +41,27 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     title = models.CharField(max_length=255, validators=[MinLengthValidator(5)])
-    content = RichTextUploadingField()
+    content = RichTextUploadingField(
+        verbose_name=_('Content'),
+        help_text=_('You can use rich text editor with images, videos and formatting')
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     subscribers = models.ManyToManyField(User, related_name='subscribed_posts', blank=True)
-    image = models.ImageField(upload_to='posts/images/', blank=True, null=True)
-    video = models.FileField(upload_to='posts/videos/', blank=True, null=True)
+    image = models.ImageField(
+        upload_to='posts/images/',
+        blank=True,
+        null=True,
+        verbose_name=_('Main Image'),
+        help_text=_('Main image for the post card')
+    )
+    video = models.FileField(
+        upload_to='posts/videos/',
+        blank=True,
+        null=True,
+        verbose_name=_('Main Video'),
+        help_text=_('Main video file (optional)')
+    )
     notify_subscribers = models.BooleanField(default=True, verbose_name=_('Notify subscribers'))
 
     class Meta:
@@ -61,6 +77,45 @@ class Post(models.Model):
 
     def get_category_display(self):
         return dict(self.CATEGORY_CHOICES).get(self.category, self.category)
+
+    def get_embedded_content(self):
+        """Извлекает встроенные медиа из контента"""
+        # from bs4 import BeautifulSoup
+        soup = BeautifulSoup(self.content, 'html.parser')
+
+        embedded_content = {
+            'images': [],
+            'videos': [],
+            'iframes': []
+        }
+
+        # Извлекаем изображения
+        for img in soup.find_all('img'):
+            embedded_content['images'].append({
+                'src': img.get('src', ''),
+                'alt': img.get('alt', ''),
+                'class': img.get('class', [])
+            })
+
+        # Извлекаем видео
+        for video in soup.find_all('video'):
+            embedded_content['videos'].append({
+                'src': video.get('src', ''),
+                'controls': video.get('controls', False),
+                'width': video.get('width', ''),
+                'height': video.get('height', '')
+            })
+
+        # Извлекаем iframe (встроенные видео с YouTube и т.д.)
+        for iframe in soup.find_all('iframe'):
+            embedded_content['iframes'].append({
+                'src': iframe.get('src', ''),
+                'width': iframe.get('width', ''),
+                'height': iframe.get('height', ''),
+                'frameborder': iframe.get('frameborder', '0')
+            })
+
+        return embedded_content
 
 
 class Response(models.Model):
